@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expense & Budget Visualizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <h1 class="app-title">💰 Budget Visualizer</h1>
+      <button id="themeToggle" class="btn-icon" aria-label="Toggle dark/light mode" title="Toggle theme">🌙</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Balance Dashboard -->
+    <section class="dashboard" aria-label="Balance Dashboard">
+      <div class="card card--income">
+        <p class="card-label">Total Income</p>
+        <p class="card-amount" id="totalIncome">Rp 0</p>
+      </div>
+      <div class="card card--expense">
+        <p class="card-label">Total Expenses</p>
+        <p class="card-amount" id="totalExpenses">Rp 0</p>
+      </div>
+      <div class="card card--balance">
+        <p class="card-label">Balance</p>
+        <p class="card-amount" id="balance">Rp 0</p>
+      </div>
+    </section>
+
+    <!-- Monthly Summary -->
+    <section class="section" aria-label="Monthly Summary">
+      <h2 class="section-title">📅 Monthly Summary</h2>
+      <div class="monthly-controls">
+        <select id="monthPicker" aria-label="Select month">
+          <!-- populated by JS -->
+        </select>
+      </div>
+      <div class="monthly-stats">
+        <div class="stat">
+          <span class="stat-label">Income</span>
+          <span class="stat-value income" id="monthIncome">Rp 0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Expenses</span>
+          <span class="stat-value expense" id="monthExpenses">Rp 0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Net</span>
+          <span class="stat-value" id="monthNet">Rp 0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Category Chart -->
+    <section class="section" aria-label="Category Chart">
+      <h2 class="section-title">📊 Spending by Category</h2>
+      <div id="chartContainer" class="chart-container">
+        <p class="chart-empty" id="chartEmpty">No expense data yet.</p>
+        <div class="pie-wrapper">
+          <svg id="pieChart" class="pie-chart" viewBox="0 0 200 200" aria-label="Pie chart of spending by category" role="img">
+            <!-- slices injected by JS -->
+          </svg>
+          <div id="pieTooltip" class="pie-tooltip" hidden></div>
+        </div>
+        <div id="chartLegend" class="chart-legend"></div>
+      </div>
+    </section>
+
+    <!-- Add Transaction Form -->
+    <section class="section" aria-label="Add Transaction">
+      <h2 class="section-title">➕ Add Transaction</h2>
+      <form id="transactionForm" novalidate>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="title">Title <span aria-hidden="true">*</span></label>
+            <input type="text" id="title" placeholder="e.g. Salary, Groceries" maxlength="60" required />
+            <span class="field-error" id="titleError"></span>
+          </div>
+          <div class="form-group">
+            <label for="amount">Amount (Rp) <span aria-hidden="true">*</span></label>
+            <input type="number" id="amount" placeholder="0" min="1" required />
+            <span class="field-error" id="amountError"></span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="type">Type <span aria-hidden="true">*</span></label>
+            <select id="type" required>
+              <option value="">-- Select type --</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+            <span class="field-error" id="typeError"></span>
+          </div>
+          <div class="form-group">
+            <label for="category">Category <span aria-hidden="true">*</span></label>
+            <select id="category" required>
+              <option value="">-- Select category --</option>
+              <!-- populated by JS -->
+            </select>
+            <span class="field-error" id="categoryError"></span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date">Date <span aria-hidden="true">*</span></label>
+            <input type="date" id="date" required />
+            <span class="field-error" id="dateError"></span>
+          </div>
+        </div>
+        <button type="submit" class="btn btn--primary btn--full">Add Transaction</button>
+      </form>
+    </section>
+
+    <!-- Custom Categories -->
+    <section class="section" aria-label="Manage Categories">
+      <h2 class="section-title">🏷️ Custom Categories</h2>
+      <div class="category-manager">
+        <div class="category-add-row">
+          <input type="text" id="newCategory" placeholder="New category name" maxlength="30" aria-label="New category name" />
+          <button id="addCategoryBtn" class="btn btn--secondary">Add</button>
+        </div>
+        <span class="field-error" id="categoryAddError"></span>
+        <div id="categoryList" class="category-chips"></div>
+      </div>
+    </section>
+
+    <!-- Spending Limit -->
+    <section class="section" aria-label="Spending Limit">
+      <h2 class="section-title">⚠️ Spending Limit</h2>
+      <p class="section-desc">Transactions over this amount will be highlighted.</p>
+      <div class="limit-row">
+        <input type="number" id="spendingLimit" placeholder="e.g. 500000" min="1" aria-label="Spending limit amount" />
+        <button id="saveLimitBtn" class="btn btn--secondary">Save</button>
+        <button id="clearLimitBtn" class="btn btn--ghost">Clear</button>
+      </div>
+      <span class="field-error" id="limitError"></span>
+      <p id="limitActive" class="limit-active" hidden></p>
+    </section>
+
+    <!-- Transaction History -->
+    <section class="section" aria-label="Transaction History">
+      <h2 class="section-title">🧾 Transaction History</h2>
+      <div class="history-controls">
+        <input type="search" id="searchInput" placeholder="Search transactions…" aria-label="Search transactions" />
+        <select id="filterType" aria-label="Filter by type">
+          <option value="all">All types</option>
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+        <select id="filterCategory" aria-label="Filter by category">
+          <option value="all">All categories</option>
+        </select>
+      </div>
+      <ul id="transactionList" class="transaction-list" aria-live="polite" aria-label="Transaction list">
+        <!-- populated by JS -->
+      </ul>
+      <p id="noTransactions" class="empty-state">No transactions found.</p>
+    </section>
+  </main>
+
+  <!-- Delete confirmation modal -->
+  <div id="deleteModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" hidden>
+    <div class="modal-box">
+      <h3 id="modalTitle">Delete Transaction?</h3>
+      <p id="modalDesc">This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button id="confirmDelete" class="btn btn--danger">Delete</button>
+        <button id="cancelDelete" class="btn btn--ghost">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div id="modalOverlay" class="modal-overlay" hidden></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
